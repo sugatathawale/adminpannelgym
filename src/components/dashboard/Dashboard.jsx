@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FiUsers,
   FiDollarSign,
@@ -9,6 +10,7 @@ import {
   FiPieChart,
   FiChevronDown,
   FiList,
+  FiUserPlus,
 } from "react-icons/fi"
 import {
   AreaChart,
@@ -23,7 +25,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import logo from '../../assets/image.png'
+import CreateFollowUp from './CreateFollowUp';
 
 // Sample data for charts
 const revenueData = [
@@ -32,7 +34,6 @@ const revenueData = [
   { name: "Mar", value: 15000 },
   { name: "Apr", value: 14000 },
 ]
-
 
 const membershipData = [
   { name: "Jan", active: 80, expired: 10 },
@@ -59,12 +60,15 @@ const QuickManageItem = ({ icon, label }) => (
 )
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const [showFollowUp, setShowFollowUp] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header with Logo */}
       <div className="bg-white shadow-sm p-4 flex justify-between items-center">
         <div className="flex items-center space-x-2">
-          <img src={logo} alt="Logo" className="h-8" />
+          <img src="/crossfit-logo.png" alt="Logo" className="h-8" />
           <span className="text-xl font-bold">CrossFit Gym </span>
         </div>
         <div className="flex items-center space-x-4">
@@ -128,6 +132,20 @@ const Dashboard = () => {
 
         {/* Main Content */}
         <div className="flex-1 p-6 bg-[#f0f4f8]">
+          {/* Create Client Button */}
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={() => navigate('/create-client')}
+              className="flex items-center px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            >
+              <FiUserPlus className="mr-2" />
+              Create Client
+            </button>
+          </div>
+
+          {/* Follow-up Form */}
+          {showFollowUp && <CreateFollowUp onClose={() => setShowFollowUp(false)} />}
+
           {/* Search Bar - Centered */}
           <div className="flex justify-center mb-8">
             <div className="flex space-x-2 w-full max-w-4xl">
@@ -179,7 +197,10 @@ const Dashboard = () => {
 
           {/* Stats Grid - First Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm">
+            <div 
+              onClick={() => navigate('/clients')}
+              className="bg-white p-6 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            >
               <div className="flex items-center mb-4">
                 <div className="bg-green-100 p-3 rounded-full mr-4">
                   <img
@@ -448,11 +469,11 @@ const Dashboard = () => {
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Area
-                      type="monotone"
-                      dataKey="value"
-                      stroke="#8b5cf6"
-                      fill="#c4b5fd"
+                    <Area 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="#8b5cf6" 
+                      fill="#c4b5fd" 
                       fillOpacity={0.3}
                     />
                   </AreaChart>
@@ -487,10 +508,10 @@ const Dashboard = () => {
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      stroke="#0ea5e9"
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="#0ea5e9" 
                       strokeWidth={2}
                       dot={{ fill: '#0ea5e9', r: 4 }}
                     />
@@ -507,12 +528,18 @@ const Dashboard = () => {
               <div>Create Inquiry</div>
             </button>
 
-            <button className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center hover:from-purple-600 hover:to-purple-700 transition-colors">
+            <button 
+              onClick={() => navigate('/create-client')}
+              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center hover:from-purple-600 hover:to-purple-700 transition-colors"
+            >
               <div className="text-3xl mb-2">👤+</div>
               <div>Create Client</div>
             </button>
 
-            <button className="bg-gradient-to-r from-blue-400 to-blue-500 text-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center hover:from-blue-500 hover:to-blue-600 transition-colors">
+            <button 
+              onClick={() => setShowFollowUp(true)}
+              className="bg-gradient-to-r from-blue-400 to-blue-500 text-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center hover:from-blue-500 hover:to-blue-600 transition-colors"
+            >
               <div className="text-3xl mb-2">💬</div>
               <div>Create Client Follow-up</div>
             </button>
@@ -540,7 +567,10 @@ const Dashboard = () => {
               <div>Add diet plan</div>
             </button>
 
-            <button className="bg-gradient-to-r from-blue-400 to-blue-500 text-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center hover:from-blue-500 hover:to-blue-600 transition-colors">
+            <button
+              onClick={() => navigate('/bulk-sms')}
+              className="bg-gradient-to-r from-blue-400 to-blue-500 text-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center hover:from-blue-500 hover:to-blue-600 transition-colors"
+            >
               <div className="text-3xl mb-2">✈️</div>
               <div>Send bulk SMS</div>
             </button>
@@ -549,7 +579,7 @@ const Dashboard = () => {
       </div>
 
       {/* Footer */}
-      <div className="bg-white p-2 text-xs text-gray-500">© CrossFit Gym </div>
+      <div className="bg-white p-2 text-xs text-gray-500">© Easy Gym Software 2025</div>
     </div>
   )
 }
