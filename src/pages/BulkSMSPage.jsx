@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiFilter, FiMessageSquare, FiImage, FiSend, FiUsers, FiPhoneCall, FiArrowLeft } from 'react-icons/fi';
+import toast, { Toaster } from 'react-hot-toast';
 
 const BulkSMSPage = () => {
   const navigate = useNavigate();
@@ -15,16 +16,8 @@ const BulkSMSPage = () => {
   const [selectedImages, setSelectedImages] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [message, setMessage] = useState('');
-  
-  // Sample client data
-  const clients = [
-    { id: '133', name: 'Esseddik', contact: '2136580597', gender: 'Male', registrationDate: '30-04-2025', package: 'شهري 5 حصص', expirationDate: '30-05-2025' },
-    { id: '123', name: 'Rajesh', contact: '6302092116', gender: 'Male', registrationDate: '28-04-2025', package: 'Annual Membership', expirationDate: '28-04-2026' },
-    { id: '122', name: 'Rahul', contact: '1234567890', gender: 'Male', registrationDate: '27-04-2025', package: 'Annual Membership', expirationDate: '27-04-2026' },
-    { id: '51', name: 'Yogesh', contact: '8855851547', gender: 'Male', registrationDate: '11-04-2025', package: 'Annual Membership', expirationDate: '11-04-2026' },
-    { id: '35', name: 'Muthu Mayandi', contact: '7338840661', gender: 'Male', registrationDate: '01-04-2025', package: 'Annual Membership', expirationDate: '01-04-2026' },
-    { id: '17', name: 'Hardhik', contact: '8985138853', gender: 'Male', registrationDate: '01-01-1970', package: '', expirationDate: '' }
-  ];
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Sample inquiry data
   const inquiries = [
@@ -33,10 +26,43 @@ const BulkSMSPage = () => {
     { id: '3', name: 'Mike Johnson', contact: '7654321098', status: 'Interested', date: '03-05-2025', source: 'Referral' }
   ];
 
+  // Fetch clients on component mount
+  useEffect(() => {
+    if (activeTab === 'clients') {
+      fetchClients();
+    }
+  }, [activeTab]);
+
+  const fetchClients = async () => {
+    try {
+      const response = await fetch('https://gymbackend-pqhj.onrender.com/api/user/getclients');
+      if (!response.ok) {
+        throw new Error('Failed to fetch clients');
+      }
+      const data = await response.json();
+      setClients(data);
+      setLoading(false);
+    } catch (error) {
+      toast.error('Error loading clients. Please try again.');
+      console.error('Error fetching clients:', error);
+      setLoading(false);
+    }
+  };
+
+  // Format date to DD-MM-YYYY
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).replace(/\//g, '-');
+  };
+
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      const ids = activeTab === 'clients' 
-        ? clients.map(client => client.id)
+      const ids = activeTab === 'clients'
+        ? clients.map(client => client._id)
         : inquiries.map(inquiry => inquiry.id);
       setSelectedClients(ids);
     } else {
@@ -95,22 +121,20 @@ const BulkSMSPage = () => {
           <div className="flex gap-1 p-4">
             <button
               onClick={() => setActiveTab('clients')}
-              className={`px-6 py-2 rounded-md flex items-center ${
-                activeTab === 'clients'
+              className={`px-6 py-2 rounded-md flex items-center ${activeTab === 'clients'
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+                }`}
             >
               <FiUsers className="mr-2" />
               Clients
             </button>
             <button
               onClick={() => setActiveTab('inquiries')}
-              className={`px-6 py-2 rounded-md flex items-center ${
-                activeTab === 'inquiries'
+              className={`px-6 py-2 rounded-md flex items-center ${activeTab === 'inquiries'
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+                }`}
             >
               <FiPhoneCall className="mr-2" />
               Inquiries
@@ -186,7 +210,7 @@ const BulkSMSPage = () => {
                           onChange={handleSelectAll}
                           checked={
                             activeTab === 'clients'
-                              ? selectedClients.length === clients.length
+                              ? selectedClients.length === clients.length && clients.length > 0
                               : selectedClients.length === inquiries.length
                           }
                           className="rounded border-gray-300"
@@ -212,41 +236,53 @@ const BulkSMSPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {activeTab === 'clients'
-                      ? clients.map((client) => (
-                          <tr key={client.id} className="border-t hover:bg-gray-50">
+                    {activeTab === 'clients' ? (
+                      loading ? (
+                        <tr>
+                          <td colSpan="6" className="py-8 text-center">
+                            <div className="flex justify-center">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        clients.map((client) => (
+                          <tr key={client._id} className="border-t hover:bg-gray-50">
                             <td className="py-3 px-4">
                               <input
                                 type="checkbox"
-                                checked={selectedClients.includes(client.id)}
-                                onChange={() => handleSelectItem(client.id)}
+                                checked={selectedClients.includes(client._id)}
+                                onChange={() => handleSelectItem(client._id)}
                                 className="rounded border-gray-300"
                               />
                             </td>
-                            <td className="py-3 px-4">{client.id}</td>
-                            <td className="py-3 px-4">{client.name}</td>
+                            <td className="py-3 px-4">{client._id.slice(-6)}</td>
+                            <td className="py-3 px-4">{client.clientName}</td>
                             <td className="py-3 px-4">{client.contact}</td>
-                            <td className="py-3 px-4">{client.package}</td>
-                            <td className="py-3 px-4">{client.expirationDate}</td>
+                            <td className="py-3 px-4">{client.selectedPackage.name}</td>
+                            <td className="py-3 px-4">{formatDate(client.endDate)}</td>
                           </tr>
                         ))
-                      : inquiries.map((inquiry) => (
-                          <tr key={inquiry.id} className="border-t hover:bg-gray-50">
-                            <td className="py-3 px-4">
-                              <input
-                                type="checkbox"
-                                checked={selectedClients.includes(inquiry.id)}
-                                onChange={() => handleSelectItem(inquiry.id)}
-                                className="rounded border-gray-300"
-                              />
-                            </td>
-                            <td className="py-3 px-4">{inquiry.id}</td>
-                            <td className="py-3 px-4">{inquiry.name}</td>
-                            <td className="py-3 px-4">{inquiry.contact}</td>
-                            <td className="py-3 px-4">{inquiry.status}</td>
-                            <td className="py-3 px-4">{inquiry.source}</td>
-                          </tr>
-                        ))}
+                      )
+                    ) : (
+                      inquiries.map((inquiry) => (
+                        <tr key={inquiry.id} className="border-t hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedClients.includes(inquiry.id)}
+                              onChange={() => handleSelectItem(inquiry.id)}
+                              className="rounded border-gray-300"
+                            />
+                          </td>
+                          <td className="py-3 px-4">{inquiry.id}</td>
+                          <td className="py-3 px-4">{inquiry.name}</td>
+                          <td className="py-3 px-4">{inquiry.contact}</td>
+                          <td className="py-3 px-4">{inquiry.status}</td>
+                          <td className="py-3 px-4">{inquiry.source}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -263,21 +299,19 @@ const BulkSMSPage = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setMessageType('BULK SMS')}
-                    className={`flex-1 px-4 py-2 rounded-md ${
-                      messageType === 'BULK SMS' 
-                        ? 'bg-pink-500 text-white' 
+                    className={`flex-1 px-4 py-2 rounded-md ${messageType === 'BULK SMS'
+                        ? 'bg-pink-500 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                      }`}
                   >
                     BULK SMS
                   </button>
                   <button
                     onClick={() => setMessageType('BULK WHATSAPP')}
-                    className={`flex-1 px-4 py-2 rounded-md ${
-                      messageType === 'BULK WHATSAPP' 
-                        ? 'bg-green-500 text-white' 
+                    className={`flex-1 px-4 py-2 rounded-md ${messageType === 'BULK WHATSAPP'
+                        ? 'bg-green-500 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                      }`}
                   >
                     BULK WHATSAPP
                   </button>
@@ -360,11 +394,10 @@ const BulkSMSPage = () => {
               <button
                 onClick={handleSend}
                 disabled={selectedClients.length === 0 || !message}
-                className={`w-full py-3 rounded-lg flex items-center justify-center space-x-2 ${
-                  selectedClients.length === 0 || !message
+                className={`w-full py-3 rounded-lg flex items-center justify-center space-x-2 ${selectedClients.length === 0 || !message
                     ? 'bg-gray-300 cursor-not-allowed'
                     : 'bg-blue-500 hover:bg-blue-600'
-                } text-white`}
+                  } text-white`}
               >
                 <FiSend />
                 <span>Send Message</span>

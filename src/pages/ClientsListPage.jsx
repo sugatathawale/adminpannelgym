@@ -1,39 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiChevronDown, FiUserPlus } from 'react-icons/fi';
+import toast, { Toaster } from 'react-hot-toast';
 
 const ClientsListPage = () => {
   const navigate = useNavigate();
   const [selectedClients, setSelectedClients] = useState([]);
   const [actionDropdownId, setActionDropdownId] = useState(null);
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  // Sample client data - replace with your actual data
-  const clients = [
-    {
-      id: '137',
-      name: 'Jayraj',
-      number: '9944414229',
-      gender: 'Male',
-      registration: '02-05-2025',
-      package: 'Half Yearly',
-      expiration: '29-10-2025',
-      rewardPoints: 'Rs.20'
-    },
-    {
-      id: '136',
-      name: 'Faizar Mirza',
-      number: '9356793527',
-      gender: 'Male',
-      registration: '02-05-2025',
-      package: '1 Month',
-      expiration: '01-06-2025',
-      rewardPoints: 'Rs.10'
+  // Fetch clients on component mount
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  const fetchClients = async () => {
+    try {
+      const response = await fetch('https://gymbackend-pqhj.onrender.com/api/user/getclients');
+      if (!response.ok) {
+        throw new Error('Failed to fetch clients');
+      }
+      const data = await response.json();
+      setClients(data);
+      setLoading(false);
+    } catch (error) {
+      toast.error('Error loading clients. Please try again.');
+      console.error('Error fetching clients:', error);
+      setLoading(false);
     }
-  ];
+  };
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedClients(clients.map(client => client.id));
+      setSelectedClients(clients.map(client => client._id));
     } else {
       setSelectedClients([]);
     }
@@ -74,8 +74,19 @@ const ClientsListPage = () => {
     };
   }, []);
 
+  // Format date to DD-MM-YYYY
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).replace(/\//g, '-');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      <Toaster />
       <h1 className="text-xl font-semibold mb-6">Client(s)</h1>
 
       <div className="space-y-4">
@@ -132,7 +143,7 @@ const ClientsListPage = () => {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded shadow">
+        <div className="bg-white rounded shadow overflow-x-auto">
           <table className="w-full">
             <thead className="bg-blue-500 text-white">
               <tr>
@@ -140,7 +151,7 @@ const ClientsListPage = () => {
                   <input
                     type="checkbox"
                     onChange={handleSelectAll}
-                    checked={selectedClients.length === clients.length}
+                    checked={selectedClients.length === clients.length && clients.length > 0}
                   />
                 </th>
                 <th className="px-4 py-2 text-left">CLIENT ID</th>
@@ -151,50 +162,56 @@ const ClientsListPage = () => {
                 <th className="px-4 py-2 text-left">REGISTRATION</th>
                 <th className="px-4 py-2 text-left">PACKAGE</th>
                 <th className="px-4 py-2 text-left">EXPIRATION</th>
-                <th className="px-4 py-2 text-left">TOTAL REWARD POINTS</th>
                 <th className="px-4 py-2 text-left">ACTION</th>
               </tr>
             </thead>
             <tbody>
-              {clients.map((client) => (
-                <tr key={client.id} className="border-b">
+              {loading ? (
+                <tr>
+                  <td colSpan="10" className="px-4 py-8 text-center">
+                    <div className="flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
+                    </div>
+                  </td>
+                </tr>
+              ) : clients.map((client) => (
+                <tr key={client._id} className="border-b">
                   <td className="px-4 py-2">
                     <input
                       type="checkbox"
-                      checked={selectedClients.includes(client.id)}
-                      onChange={() => handleSelectClient(client.id)}
+                      checked={selectedClients.includes(client._id)}
+                      onChange={() => handleSelectClient(client._id)}
                     />
                   </td>
-                  <td className="px-4 py-2">{client.id}</td>
+                  <td className="px-4 py-2">{client._id.slice(-6)}</td>
                   <td className="px-4 py-2">
                     <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
-                      {client.name[0]}
+                      {client.clientName[0]}
                     </div>
                   </td>
-                  <td className="px-4 py-2">{client.name}</td>
-                  <td className="px-4 py-2">{client.number}</td>
-                  <td className="px-4 py-2">{client.gender}</td>
-                  <td className="px-4 py-2">{client.registration}</td>
-                  <td className="px-4 py-2">{client.package}</td>
-                  <td className="px-4 py-2">{client.expiration}</td>
-                  <td className="px-4 py-2">{client.rewardPoints}</td>
+                  <td className="px-4 py-2">{client.clientName}</td>
+                  <td className="px-4 py-2">{client.contact}</td>
+                  <td className="px-4 py-2 capitalize">{client.gender}</td>
+                  <td className="px-4 py-2">{formatDate(client.joinDate)}</td>
+                  <td className="px-4 py-2">{client.selectedPackage.name}</td>
+                  <td className="px-4 py-2">{formatDate(client.endDate)}</td>
                   <td className="px-4 py-2">
                     <div className="flex space-x-1">
                       <button
-                        onClick={() => handleViewProfile(client.id)}
+                        onClick={() => handleViewProfile(client._id)}
                         className="bg-pink-500 text-white px-3 py-1 rounded text-sm"
                       >
                         PROFILE
                       </button>
                       <div className="relative action-dropdown">
                         <button
-                          onClick={() => handleActionClick(client.id)}
+                          onClick={() => handleActionClick(client._id)}
                           className="bg-pink-500 text-white px-3 py-1 rounded text-sm inline-flex items-center"
                         >
                           ACTION
                           <FiChevronDown className="ml-1 h-4 w-4" />
                         </button>
-                        {actionDropdownId === client.id && (
+                        {actionDropdownId === client._id && (
                           <div className="absolute right-0 mt-1 w-64 bg-white rounded shadow-lg z-50 border">
                             <div className="py-1">
                               <button className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100">

@@ -9,12 +9,29 @@ const CreateClientPage = () => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [packageToDelete, setPackageToDelete] = useState(null);
   const [editingPackage, setEditingPackage] = useState(null);
-  const [packageFormData, setPackageFormData] = useState({
-    name: '',
-    duration: '',
-    price: '',
-    status: 'active'
-  });
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch packages on component mount
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  const fetchPackages = async () => {
+    try {
+      const response = await fetch('https://gymbackend-pqhj.onrender.com/api/user/getpackages');
+      if (!response.ok) {
+        throw new Error('Failed to fetch packages');
+      }
+      const data = await response.json();
+      setPackages(data);
+      setLoading(false);
+    } catch (error) {
+      toast.error('Error loading packages. Please try again.');
+      console.error('Error fetching packages:', error);
+      setLoading(false);
+    }
+  };
 
   const [formData, setFormData] = useState({
     clientName: '',
@@ -32,45 +49,18 @@ const CreateClientPage = () => {
     address: ''
   });
 
+  const [packageFormData, setPackageFormData] = useState({
+    name: '',
+    duration: '',
+    price: '',
+    status: 'active'
+  });
+
   const [calculations, setCalculations] = useState({
     totalAmount: 0,
     remainingAmount: 0,
     finalAmount: 0
   });
-
-  // Updated gym packages with duration in days and status
-  const gymPackages = [
-    { 
-      id: 'p1', 
-      name: 'Silver Package', 
-      duration: 30, 
-      price: 1000, 
-      status: 'active' 
-    },
-    { 
-      id: 'p2', 
-      name: 'Gold Package', 
-      duration: 90, 
-      price: 2700, 
-      status: 'active' 
-    },
-    { 
-      id: 'p3', 
-      name: 'Diamond Package', 
-      duration: 180, 
-      price: 5000, 
-      status: 'active' 
-    },
-    { 
-      id: 'p4', 
-      name: 'Platinum Package', 
-      duration: 365, 
-      price: 9000, 
-      status: 'active' 
-    }
-  ];
-
-  const [packages, setPackages] = useState(gymPackages);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -110,23 +100,47 @@ const CreateClientPage = () => {
     setShowPackageModal(true);
   };
 
-  const handleSavePackage = () => {
-    if (editingPackage) {
-      // Edit existing package
-      setPackages(prev => prev.map(p => 
-        p.id === editingPackage.id 
-          ? { ...p, ...packageFormData }
-          : p
-      ));
-    } else {
-      // Add new package
-      const newPackage = {
-        id: `p${packages.length + 1}`,
-        ...packageFormData
+  const handleSavePackage = async () => {
+    try {
+      const packageData = {
+        name: packageFormData.name,
+        duration: parseInt(packageFormData.duration),
+        price: parseInt(packageFormData.price),
+        status: packageFormData.status
       };
+
+      const response = await fetch('https://gymbackend-pqhj.onrender.com/api/user/packagecreate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(packageData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create package');
+      }
+
+      const newPackage = await response.json();
+
+      // Update packages list
       setPackages(prev => [...prev, newPackage]);
+
+      // Show success notification
+      toast.success('Package created successfully!', {
+        duration: 3000,
+        position: 'top-right',
+      });
+
+      // Close modal
+      setShowPackageModal(false);
+    } catch (error) {
+      toast.error(error.message || 'Error creating package. Please try again.', {
+        duration: 3000,
+        position: 'top-right',
+      });
+      console.error('Error:', error);
     }
-    setShowPackageModal(false);
   };
 
   const handleDeleteClick = (packageId) => {
@@ -135,7 +149,7 @@ const CreateClientPage = () => {
   };
 
   const handleConfirmDelete = () => {
-    setPackages(prev => prev.filter(p => p.id !== packageToDelete));
+    setPackages(prev => prev.filter(p => p._id !== packageToDelete));
     setShowDeleteConfirmation(false);
     setPackageToDelete(null);
   };
@@ -143,11 +157,11 @@ const CreateClientPage = () => {
   // Updated end date calculation based on package duration
   useEffect(() => {
     if (formData.joinDate && formData.selectedPackage) {
-      const selectedPackage = gymPackages.find(pkg => pkg.id === formData.selectedPackage);
+      const selectedPackage = packages.find(pkg => pkg._id === formData.selectedPackage);
       if (selectedPackage) {
         const startDate = new Date(formData.joinDate);
         let endDate = new Date(startDate);
-        
+
         // Add the package duration in days to the start date
         endDate.setDate(endDate.getDate() + selectedPackage.duration);
 
@@ -161,7 +175,7 @@ const CreateClientPage = () => {
 
   // Calculate amounts whenever relevant fields change
   useEffect(() => {
-    const selectedPackage = gymPackages.find(pkg => pkg.id === formData.selectedPackage);
+    const selectedPackage = packages.find(pkg => pkg._id === formData.selectedPackage);
     const packageAmount = selectedPackage ? selectedPackage.price : 0;
     const admissionCharges = parseFloat(formData.admissionCharges) || 0;
     const discount = parseFloat(formData.discount) || 0;
@@ -180,47 +194,61 @@ const CreateClientPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
+      // Prepare the client data for API
+      const clientData = {
+        clientName: formData.clientName,
+        gender: formData.gender,
+        contact: formData.contact,
+        email: formData.email,
+        address: formData.address,
+        selectedPackage: formData.selectedPackage,
+        joinDate: formData.joinDate,
+        endDate: formData.endDate,
+        admissionCharges: parseFloat(formData.admissionCharges) || 0,
+        discount: parseFloat(formData.discount) || 0,
+        paidAmount: parseFloat(formData.paidAmount) || 0,
+        paymentMode: formData.paymentMode
+      };
+
+      const response = await fetch('https://gymbackend-pqhj.onrender.com/api/user/createclient', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(clientData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create client');
+      }
+
+      const data = await response.json();
+
+      // Show appropriate success message based on payment mode
       if (formData.paymentMode === 'offline_full') {
-        // Direct client creation for fully paid
-        console.log('Creating client:', formData);
-        // Add your API call here to create client
-        
         toast.success('Client created successfully! Payment received in full.', {
           duration: 3000,
           position: 'top-right',
         });
-        
-        // Navigate back to dashboard
-        navigate('/');
       } else if (formData.paymentMode === 'offline_partial') {
-        // Create client and generate bill for remaining amount
-        console.log('Creating client and generating bill:', formData);
-        
         toast.success('Client created and bill generated for remaining amount!', {
           duration: 3000,
           position: 'top-right',
         });
-        
-        navigate('/');
       } else if (formData.paymentMode === 'online') {
-        // Show loading while generating payment link
-        toast.loading('Generating payment link...', {
-          duration: 2000,
-        });
-        
-        // Send SMS with payment link
-        console.log('Sending payment request SMS to client');
-        // Implement your SMS sending logic here
-        
-        toast.success('Payment link sent via SMS!', {
+        toast.success('Client created. Payment link sent via SMS and email.', {
           duration: 3000,
           position: 'top-right',
         });
       }
+
+      // Navigate back to dashboard
+      navigate('/');
     } catch (error) {
-      toast.error('Error creating client. Please try again.', {
+      toast.error(error.message || 'Error creating client. Please try again.', {
         duration: 3000,
         position: 'top-right',
       });
@@ -245,7 +273,7 @@ const CreateClientPage = () => {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Create New Client</h2>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Information */}
             <div className="bg-gray-50 p-4 rounded-lg">
@@ -331,15 +359,16 @@ const CreateClientPage = () => {
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                       required
+                      disabled={loading}
                     >
                       <option value="">Select a package</option>
                       {packages
                         .filter(pkg => pkg.status === 'active')
                         .map(pkg => (
-                          <option key={pkg.id} value={pkg.id}>
+                          <option key={pkg._id} value={pkg._id}>
                             {pkg.name} - {pkg.duration} days - ₹{pkg.price}
                           </option>
-                      ))}
+                        ))}
                     </select>
                     <div className="absolute right-0 top-0 h-full flex items-center pr-2 space-x-1">
                       <button
@@ -350,27 +379,12 @@ const CreateClientPage = () => {
                       >
                         <FiPlus className="w-5 h-5" />
                       </button>
-                      {formData.selectedPackage && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => handleEditPackage(packages.find(p => p.id === formData.selectedPackage))}
-                            className="p-1 text-blue-500 hover:text-blue-600"
-                            title="Edit Selected Package"
-                          >
-                            <FiEdit2 className="w-5 h-5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteClick(formData.selectedPackage)}
-                            className="p-1 text-red-500 hover:text-red-600"
-                            title="Delete Selected Package"
-                          >
-                            <FiTrash2 className="w-5 h-5" />
-                          </button>
-                        </>
-                      )}
                     </div>
+                    {loading && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-pink-500"></div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -478,7 +492,7 @@ const CreateClientPage = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Package Amount:</span>
-                    <span>₹{gymPackages.find(pkg => pkg.id === formData.selectedPackage)?.price || 0}</span>
+                    <span>₹{packages.find(pkg => pkg._id === formData.selectedPackage)?.price || 0}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Admission Charges:</span>
@@ -565,7 +579,7 @@ const CreateClientPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">
-              {editingPackage ? 'Edit Package' : 'Add New Package'}
+              Add New Package
             </h3>
             <div className="space-y-4">
               <div>
@@ -579,6 +593,7 @@ const CreateClientPage = () => {
                   onChange={handlePackageFormChange}
                   className="w-full px-3 py-2 border rounded-md"
                   required
+                  placeholder="e.g., 2 Month Plan"
                 />
               </div>
               <div>
@@ -592,6 +607,8 @@ const CreateClientPage = () => {
                   onChange={handlePackageFormChange}
                   className="w-full px-3 py-2 border rounded-md"
                   required
+                  min="1"
+                  placeholder="e.g., 60"
                 />
               </div>
               <div>
@@ -605,6 +622,8 @@ const CreateClientPage = () => {
                   onChange={handlePackageFormChange}
                   className="w-full px-3 py-2 border rounded-md"
                   required
+                  min="0"
+                  placeholder="e.g., 1000"
                 />
               </div>
               <div>
@@ -633,7 +652,7 @@ const CreateClientPage = () => {
                 onClick={handleSavePackage}
                 className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600"
               >
-                {editingPackage ? 'Update Package' : 'Add Package'}
+                Create Package
               </button>
             </div>
           </div>
