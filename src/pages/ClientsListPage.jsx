@@ -9,7 +9,9 @@ const ClientsListPage = () => {
   const [actionDropdownId, setActionDropdownId] = useState(null);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState(null);
+
   // Fetch clients on component mount
   useEffect(() => {
     fetchClients();
@@ -58,6 +60,35 @@ const ClientsListPage = () => {
       setActionDropdownId(null);
     } else {
       setActionDropdownId(clientId);
+    }
+  };
+
+  const handleDeleteClient = async (clientId) => {
+    setClientToDelete(clientId);
+    setShowDeleteConfirmation(true);
+    setActionDropdownId(null); // Close the action dropdown
+  };
+
+  const confirmDeleteClient = async () => {
+    try {
+      const response = await fetch(`https://gymbackend-pqhj.onrender.com/api/user/deleteclient/${clientToDelete}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete client');
+      }
+
+      // Remove client from state
+      setClients(prev => prev.filter(client => client._id !== clientToDelete));
+      toast.success('Client deleted successfully');
+
+      // Reset states
+      setShowDeleteConfirmation(false);
+      setClientToDelete(null);
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      toast.error('Error deleting client. Please try again.');
     }
   };
 
@@ -241,7 +272,10 @@ const ClientsListPage = () => {
                               <button className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100">
                                 Register RFID no.
                               </button>
-                              <button className="w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100">
+                              <button
+                                onClick={() => handleDeleteClient(client._id)}
+                                className="w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
+                              >
                                 Delete client
                               </button>
                             </div>
@@ -250,7 +284,7 @@ const ClientsListPage = () => {
                       </div>
                       <button className="bg-green-500 text-white px-3 py-1 rounded text-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8 14l3-3H7v-2h4l-3-3h2l4 4-4 4H8zm9-1h-3v2l-4-4 4-4v2h3v4z"/>
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8 14l3-3H7v-2h4l-3-3h2l4 4-4 4H8zm9-1h-3v2l-4-4 4-4v2h3v4z" />
                         </svg>
                       </button>
                     </div>
@@ -261,6 +295,33 @@ const ClientsListPage = () => {
           </table>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Delete Client</h3>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete this client? This action cannot be undone.</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirmation(false);
+                  setClientToDelete(null);
+                }}
+                className="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteClient}
+                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

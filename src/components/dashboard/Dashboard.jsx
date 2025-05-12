@@ -26,6 +26,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import CreateFollowUp from './CreateFollowUp';
+import CreateInquiry from './CreateInquiry';
 
 // Sample data for charts
 const revenueData = [
@@ -62,6 +63,7 @@ const QuickManageItem = ({ icon, label }) => (
 const Dashboard = () => {
   const navigate = useNavigate();
   const [showFollowUp, setShowFollowUp] = useState(false);
+  const [showInquiryModal, setShowInquiryModal] = useState(false);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -120,7 +122,7 @@ const Dashboard = () => {
           </div>
           <div className="space-y-1">
             <QuickManageItem icon={<FiClock className="text-gray-600" />} label="Follow-ups" />
-            <QuickManageItem icon={<FiMessageSquare className="text-gray-600" />} label="Pending Inquiries" />
+            <QuickManageItem icon={<FiMessageSquare className="text-gray-600" />} label="Inquiries" />
             <QuickManageItem icon={<FiDollarSign className="text-gray-600" />} label="Pending payments" />
             <QuickManageItem icon={<FiCalendar className="text-gray-600" />} label="Upcoming Renewals" />
             <QuickManageItem icon={<FiUsers className="text-gray-600" />} label="Inconsistant Clients" />
@@ -230,7 +232,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Total collection</p>
-                  <h3 className="text-2xl font-bold">14,000.00</h3>
+                  <h3 className="text-2xl font-bold">00</h3>
                 </div>
               </div>
               <div className="h-1 w-full bg-gray-100 rounded-full">
@@ -268,7 +270,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Total PT Collection</p>
-                  <h3 className="text-2xl font-bold">8,000.00</h3>
+                  <h3 className="text-2xl font-bold">00</h3>
                 </div>
               </div>
               <div className="h-1 w-full bg-gray-100 rounded-full">
@@ -290,7 +292,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Profit/Loss</p>
-                  <h3 className="text-2xl font-bold">14,000.00</h3>
+                  <h3 className="text-2xl font-bold">00</h3>
                 </div>
               </div>
               <div className="h-1 w-full bg-gray-100 rounded-full">
@@ -298,17 +300,18 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-sm">
+            <div className="bg-white p-6 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate('/inquiries')}>
               <div className="flex items-center mb-4">
                 <div className="bg-green-100 p-3 rounded-full mr-4">
                   <img
                     src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YWRlODAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1tZXNzYWdlLXNxdWFyZSI+PHBhdGggZD0iTTIxIDEyYzAgMS42Ni0uMzMgMyAyIDQtMS41IDEtMiAuMzMtMiAyIDAgMi0xIDMtMyAzcy0zLTEtMy0zYzAtMS42Ni0uMzMtMyAyLTQgMS41LTEgMi0uMzMgMi0yIDAtMiAxLTMgMy0zczMgMSAzIDNaIi8+PHBhdGggZD0iTTExIDE5Yy0xLjY2IDAtMy0xLjM0LTMtM1Y0YzAtMS42NiAxLjM0LTMgMy0zaDYuNWEyLjUgMi41IDAgMCAxIDIuNSAyLjVWOCIvPjwvc3ZnPg=="
-                    alt="Pending Inquiry(s)"
+                    alt="Inquiries"
                     className="w-6 h-6"
                   />
                 </div>
                 <div>
-                  <p className="text-gray-500 text-sm">Pending Inquiry(s)</p>
+                  <p className="text-gray-500 text-sm">Inquiry(s)</p>
                   <h3 className="text-2xl font-bold">0</h3>
                 </div>
               </div>
@@ -328,7 +331,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Active clients</p>
-                  <h3 className="text-2xl font-bold">103</h3>
+                  <h3 className="text-2xl font-bold">00</h3>
                 </div>
               </div>
               <div className="h-1 w-full bg-gray-100 rounded-full">
@@ -347,7 +350,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Expired clients</p>
-                  <h3 className="text-2xl font-bold">14</h3>
+                  <h3 className="text-2xl font-bold">0</h3>
                 </div>
               </div>
               <div className="h-1 w-full bg-gray-100 rounded-full">
@@ -369,7 +372,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Profile Created clients</p>
-                  <h3 className="text-2xl font-bold">8</h3>
+                  <h3 className="text-2xl font-bold">0</h3>
                 </div>
               </div>
               <div className="h-1 w-full bg-gray-100 rounded-full">
@@ -388,7 +391,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Booked PT Sessions</p>
-                  <h3 className="text-2xl font-bold">1</h3>
+                  <h3 className="text-2xl font-bold">0</h3>
                 </div>
               </div>
               <div className="h-1 w-full bg-gray-100 rounded-full">
@@ -407,7 +410,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Follow-ups</p>
-                  <h3 className="text-2xl font-bold">9</h3>
+                  <h3 className="text-2xl font-bold">0</h3>
                 </div>
               </div>
               <div className="h-1 w-full bg-gray-100 rounded-full">
@@ -523,7 +526,10 @@ const Dashboard = () => {
 
           {/* Action Buttons - First Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <button className="bg-gradient-to-r from-pink-500 to-pink-600 text-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center hover:from-pink-600 hover:to-pink-700 transition-colors">
+            <button
+              onClick={() => setShowInquiryModal(true)}
+              className="bg-gradient-to-r from-pink-500 to-pink-600 text-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center hover:from-pink-600 hover:to-pink-700 transition-colors"
+            >
               <div className="text-3xl mb-2">+</div>
               <div>Create Inquiry</div>
             </button>
@@ -580,6 +586,16 @@ const Dashboard = () => {
 
       {/* Footer */}
       <div className="bg-white p-2 text-xs text-gray-500">© Easy Gym Software 2025</div>
+
+      {showInquiryModal && (
+        <CreateInquiry
+          onClose={() => setShowInquiryModal(false)}
+          onSuccess={() => {
+            setShowInquiryModal(false);
+            // Optionally refresh dashboard data if needed
+          }}
+        />
+      )}
     </div>
   )
 }

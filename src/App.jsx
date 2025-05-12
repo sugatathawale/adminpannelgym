@@ -7,6 +7,7 @@ import ClientsListPage from './pages/ClientsListPage';
 import ClientProfilePage from './pages/ClientProfilePage';
 import Login from './components/auth/Login';
 import Attendance from './components/dashboard/Attendance';
+import InquiriesList from './components/dashboard/InquiriesList';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -58,6 +59,12 @@ const App = () => {
         <Route path="/client/:clientId" element={
           <ProtectedRoute>
             <ClientProfilePage />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/inquiries" element={
+          <ProtectedRoute>
+            <InquiriesList />
           </ProtectedRoute>
         } />
 
