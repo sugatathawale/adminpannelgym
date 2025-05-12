@@ -197,7 +197,7 @@ const Dashboard = () => {
 
           {/* Stats Grid - First Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <div 
+            <div
               onClick={() => navigate('/clients')}
               className="bg-white p-6 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
             >
@@ -469,11 +469,11 @@ const Dashboard = () => {
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Area 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke="#8b5cf6" 
-                      fill="#c4b5fd" 
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#8b5cf6"
+                      fill="#c4b5fd"
                       fillOpacity={0.3}
                     />
                   </AreaChart>
@@ -508,10 +508,10 @@ const Dashboard = () => {
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Line 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke="#0ea5e9" 
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#0ea5e9"
                       strokeWidth={2}
                       dot={{ fill: '#0ea5e9', r: 4 }}
                     />
@@ -528,7 +528,7 @@ const Dashboard = () => {
               <div>Create Inquiry</div>
             </button>
 
-            <button 
+            <button
               onClick={() => navigate('/create-client')}
               className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center hover:from-purple-600 hover:to-purple-700 transition-colors"
             >
@@ -536,7 +536,7 @@ const Dashboard = () => {
               <div>Create Client</div>
             </button>
 
-            <button 
+            <button
               onClick={() => setShowFollowUp(true)}
               className="bg-gradient-to-r from-blue-400 to-blue-500 text-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center hover:from-blue-500 hover:to-blue-600 transition-colors"
             >

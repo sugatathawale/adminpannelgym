@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiUser, FiUsers, FiUserCheck, FiLock } from 'react-icons/fi';
 import logo from '../../assets/image.png'
+
 const LoginCard = ({ role, icon, gradient, credentials, onSubmit }) => {
   const [formData, setFormData] = useState({ username: '', password: '' });
+  const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError('');
     onSubmit(formData);
   };
 
@@ -50,6 +53,9 @@ const LoginCard = ({ role, icon, gradient, credentials, onSubmit }) => {
               <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
           </div>
+          {error && (
+            <div className="text-red-500 text-sm">{error}</div>
+          )}
           <button
             type="submit"
             className={`w-full py-3 rounded-lg ${gradient} text-white font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all`}
@@ -67,6 +73,7 @@ const LoginCard = ({ role, icon, gradient, credentials, onSubmit }) => {
 
 const Login = () => {
   const navigate = useNavigate();
+  const [error, setError] = useState('');
 
   const roles = [
     {
@@ -80,12 +87,6 @@ const Login = () => {
       icon: <FiUser className="w-8 h-8 text-pink-600" />,
       gradient: 'bg-gradient-to-r from-pink-500 to-purple-600',
       credentials: { username: 'reception', password: 'reception123' }
-    },
-    {
-      role: 'Trainer',
-      icon: <FiUsers className="w-8 h-8 text-blue-600" />,
-      gradient: 'bg-gradient-to-r from-blue-500 to-indigo-600',
-      credentials: { username: 'trainer', password: 'trainer123' }
     }
   ];
 
@@ -96,13 +97,22 @@ const Login = () => {
     );
 
     if (role) {
+      // Store user info in localStorage
       localStorage.setItem('user', JSON.stringify({
         username: credentials.username,
-        role: role.role.toLowerCase().replace(' ', '')
+        role: role.role.toLowerCase().replace(' ', ''),
+        isAuthenticated: true
       }));
-      navigate('/dashboard');
+
+      // Navigate based on role
+      if (role.role === 'Receptionist') {
+        navigate('/attendance');
+      } else {
+        navigate('/');
+      }
+      setError('');
     } else {
-      alert('Invalid credentials!');
+      setError('Invalid credentials! Please try again.');
     }
   };
 
@@ -115,16 +125,20 @@ const Login = () => {
             <div
               className="w-full h-full bg-contain bg-center bg-no-repeat"
               style={{ backgroundImage: `url(${logo})` }}
-            >
-            </div>
+            />
           </div>
 
           <h1 className="text-3xl font-bold text-white mb-2">CrossFit Admin Panel</h1>
           <p className="text-gray-400">Choose your role to login</p>
+          {error && (
+            <div className="mt-4 text-red-400 bg-red-900/50 p-3 rounded-lg">
+              {error}
+            </div>
+          )}
         </div>
 
         {/* Login Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {roles.map((roleData, index) => (
             <LoginCard
               key={index}
